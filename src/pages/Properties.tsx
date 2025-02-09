@@ -4,9 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { PropertyForm, PropertyFormValues } from "@/components/property-form";
+import { useState } from "react";
+
+interface Property {
+  id: number;
+  title: string;
+  address: string;
+  status: string;
+  price: string;
+}
 
 const Properties = () => {
-  const properties = [
+  const [properties, setProperties] = useState<Property[]>([
     {
       id: 1,
       title: "Apartamento Centro",
@@ -28,7 +45,20 @@ const Properties = () => {
       status: "Alugado",
       price: "R$ 1.800",
     },
-  ];
+  ]);
+
+  const [open, setOpen] = useState(false);
+
+  const handleSubmit = (values: PropertyFormValues) => {
+    const newProperty: Property = {
+      id: properties.length + 1,
+      ...values,
+      status: "Disponível",
+    };
+
+    setProperties([...properties, newProperty]);
+    setOpen(false);
+  };
 
   return (
     <SidebarProvider>
@@ -43,10 +73,20 @@ const Properties = () => {
                 Gerencie suas propriedades
               </p>
             </div>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Propriedade
-            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Propriedade
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nova Propriedade</DialogTitle>
+                </DialogHeader>
+                <PropertyForm onSubmit={handleSubmit} />
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
