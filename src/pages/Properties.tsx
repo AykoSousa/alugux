@@ -1,9 +1,9 @@
 
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PropertyForm, PropertyFormValues } from "@/components/property-form";
 import { useState } from "react";
+import { PropertyForm, PropertyFormValues } from "@/components/property-form";
+import { toast } from "sonner";
 
 interface Property {
   id: number;
@@ -48,16 +49,46 @@ const Properties = () => {
   ]);
 
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   const handleSubmit = (values: PropertyFormValues) => {
     const newProperty: Property = {
       id: properties.length + 1,
-      ...values,
+      title: values.title,
+      address: values.address,
+      price: values.price,
       status: "Disponível",
     };
 
     setProperties([...properties, newProperty]);
     setOpen(false);
+    toast.success("Propriedade cadastrada com sucesso!");
+  };
+
+  const handleEdit = (values: PropertyFormValues) => {
+    if (!selectedProperty) return;
+
+    const updatedProperties = properties.map((property) =>
+      property.id === selectedProperty.id
+        ? {
+            ...property,
+            title: values.title,
+            address: values.address,
+            price: values.price,
+          }
+        : property
+    );
+
+    setProperties(updatedProperties);
+    setEditOpen(false);
+    setSelectedProperty(null);
+    toast.success("Propriedade atualizada com sucesso!");
+  };
+
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+    setEditOpen(true);
   };
 
   return (
@@ -91,7 +122,11 @@ const Properties = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {properties.map((property) => (
-              <Card key={property.id} className="animated-card cursor-pointer">
+              <Card
+                key={property.id}
+                className="animated-card cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handlePropertyClick(property)}
+              >
                 <CardHeader>
                   <CardTitle className="text-xl">{property.title}</CardTitle>
                 </CardHeader>
@@ -117,6 +152,24 @@ const Properties = () => {
               </Card>
             ))}
           </div>
+
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar Propriedade</DialogTitle>
+              </DialogHeader>
+              {selectedProperty && (
+                <PropertyForm
+                  onSubmit={handleEdit}
+                  defaultValues={{
+                    title: selectedProperty.title,
+                    address: selectedProperty.address,
+                    price: selectedProperty.price,
+                  }}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </SidebarProvider>

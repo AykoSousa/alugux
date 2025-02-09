@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { RentalForm, RentalFormValues } from "@/components/rental-form";
+import { toast } from "sonner";
 
 interface Rental {
   id: number;
@@ -51,6 +52,8 @@ const Rentals = () => {
   ]);
 
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
 
   // Simulated available properties (in a real app, this would come from your properties database)
   const availableProperties = [
@@ -63,12 +66,48 @@ const Rentals = () => {
   const handleSubmit = (values: RentalFormValues) => {
     const newRental: Rental = {
       id: rentals.length + 1,
-      ...values,
+      propertyTitle: values.propertyTitle,
+      tenantName: values.tenantName,
+      tenantCpf: values.tenantCpf,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      monthlyPrice: values.monthlyPrice,
       status: "Ativo",
+      contractFile: values.contractFile,
     };
 
     setRentals([...rentals, newRental]);
     setOpen(false);
+    toast.success("Aluguel cadastrado com sucesso!");
+  };
+
+  const handleEdit = (values: RentalFormValues) => {
+    if (!selectedRental) return;
+
+    const updatedRentals = rentals.map((rental) =>
+      rental.id === selectedRental.id
+        ? {
+            ...rental,
+            propertyTitle: values.propertyTitle,
+            tenantName: values.tenantName,
+            tenantCpf: values.tenantCpf,
+            startDate: values.startDate,
+            endDate: values.endDate,
+            monthlyPrice: values.monthlyPrice,
+            contractFile: values.contractFile,
+          }
+        : rental
+    );
+
+    setRentals(updatedRentals);
+    setEditOpen(false);
+    setSelectedRental(null);
+    toast.success("Aluguel atualizado com sucesso!");
+  };
+
+  const handleRentalClick = (rental: Rental) => {
+    setSelectedRental(rental);
+    setEditOpen(true);
   };
 
   return (
@@ -105,11 +144,13 @@ const Rentals = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {rentals.map((rental) => (
-              <Card key={rental.id} className="animated-card cursor-pointer">
+              <Card
+                key={rental.id}
+                className="animated-card cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handleRentalClick(rental)}
+              >
                 <CardHeader>
-                  <CardTitle className="text-xl">
-                    {rental.propertyTitle}
-                  </CardTitle>
+                  <CardTitle className="text-xl">{rental.propertyTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -139,6 +180,28 @@ const Rentals = () => {
               </Card>
             ))}
           </div>
+
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar Aluguel</DialogTitle>
+              </DialogHeader>
+              {selectedRental && (
+                <RentalForm
+                  onSubmit={handleEdit}
+                  availableProperties={availableProperties}
+                  defaultValues={{
+                    propertyTitle: selectedRental.propertyTitle,
+                    tenantName: selectedRental.tenantName,
+                    tenantCpf: selectedRental.tenantCpf,
+                    startDate: selectedRental.startDate,
+                    endDate: selectedRental.endDate,
+                    monthlyPrice: selectedRental.monthlyPrice,
+                  }}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </SidebarProvider>
