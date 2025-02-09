@@ -1,14 +1,66 @@
-// Update this page (the content is just a fallback if you fail to update the page)
 
-const Index = () => {
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Key, Users } from "lucide-react";
+
+const Dashboard = () => {
+  const stats = [
+    {
+      title: "Total de Propriedades",
+      value: "12",
+      icon: Building2,
+      description: "Imóveis cadastrados",
+    },
+    {
+      title: "Aluguéis Ativos",
+      value: "8",
+      icon: Key,
+      description: "Contratos em andamento",
+    },
+    {
+      title: "Inquilinos",
+      value: "15",
+      icon: Users,
+      description: "Inquilinos cadastrados",
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <main className="flex-1 p-8 animate-fade-in">
+          <SidebarTrigger />
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-2">
+              Bem-vindo ao seu painel de controle
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {stats.map((stat) => (
+              <Card key={stat.title} className="animated-card">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <stat.icon className="w-4 h-4 text-gray-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
-export default Index;
+export default Dashboard;
