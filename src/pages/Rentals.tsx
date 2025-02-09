@@ -18,10 +18,12 @@ interface Rental {
   id: number;
   propertyTitle: string;
   tenantName: string;
+  tenantCpf: string;
   startDate: string;
   endDate: string;
   status: string;
   monthlyPrice: string;
+  contractFile?: File;
 }
 
 const Rentals = () => {
@@ -30,6 +32,7 @@ const Rentals = () => {
       id: 1,
       propertyTitle: "Apartamento Centro",
       tenantName: "João Silva",
+      tenantCpf: "12345678900",
       startDate: "2024-01-01",
       endDate: "2024-12-31",
       status: "Ativo",
@@ -39,6 +42,7 @@ const Rentals = () => {
       id: 2,
       propertyTitle: "Casa Jardim América",
       tenantName: "Maria Santos",
+      tenantCpf: "98765432100",
       startDate: "2024-02-01",
       endDate: "2025-01-31",
       status: "Ativo",
@@ -47,6 +51,14 @@ const Rentals = () => {
   ]);
 
   const [open, setOpen] = useState(false);
+
+  // Simulated available properties (in a real app, this would come from your properties database)
+  const availableProperties = [
+    { id: 1, title: "Apartamento Centro" },
+    { id: 2, title: "Casa Jardim América" },
+    { id: 3, title: "Sala Comercial Downtown" },
+    { id: 4, title: "Cobertura Beira Mar" },
+  ];
 
   const handleSubmit = (values: RentalFormValues) => {
     const newRental: Rental = {
@@ -83,7 +95,10 @@ const Rentals = () => {
                 <DialogHeader>
                   <DialogTitle>Novo Aluguel</DialogTitle>
                 </DialogHeader>
-                <RentalForm onSubmit={handleSubmit} />
+                <RentalForm
+                  onSubmit={handleSubmit}
+                  availableProperties={availableProperties}
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -100,6 +115,9 @@ const Rentals = () => {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
                       Inquilino: {rental.tenantName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      CPF: {rental.tenantCpf}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Período: {rental.startDate} até {rental.endDate}

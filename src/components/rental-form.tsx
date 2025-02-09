@@ -9,31 +9,52 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-  propertyTitle: z.string().min(1, "O título da propriedade é obrigatório"),
+  propertyTitle: z.string().min(1, "A propriedade é obrigatória"),
   tenantName: z.string().min(1, "O nome do inquilino é obrigatório"),
+  tenantCpf: z
+    .string()
+    .min(11, "CPF inválido")
+    .max(11, "CPF inválido")
+    .regex(/^\d+$/, "CPF deve conter apenas números"),
   startDate: z.string().min(1, "A data inicial é obrigatória"),
   endDate: z.string().min(1, "A data final é obrigatória"),
   monthlyPrice: z.string().min(1, "O valor mensal é obrigatório"),
+  contractFile: z
+    .instanceof(File)
+    .optional()
+    .refine((file) => {
+      if (!file) return true;
+      return file.size <= 5 * 1024 * 1024;
+    }, "O arquivo deve ter no máximo 5MB"),
 });
 
 export type RentalFormValues = z.infer<typeof formSchema>;
 
 interface RentalFormProps {
   onSubmit: (values: RentalFormValues) => void;
+  availableProperties: Array<{ id: number; title: string }>;
 }
 
-export function RentalForm({ onSubmit }: RentalFormProps) {
+export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
   const form = useForm<RentalFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       propertyTitle: "",
       tenantName: "",
+      tenantCpf: "",
       startDate: "",
       endDate: "",
       monthlyPrice: "",
@@ -54,10 +75,21 @@ export function RentalForm({ onSubmit }: RentalFormProps) {
           name="propertyTitle"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Título da Propriedade</FormLabel>
-              <FormControl>
-                <Input placeholder="Apartamento Centro" {...field} />
-              </FormControl>
+              <FormLabel>Propriedade</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma propriedade" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {availableProperties.map((property) => (
+                    <SelectItem key={property.id} value={property.title}>
+                      {property.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -71,6 +103,20 @@ export function RentalForm({ onSubmit }: RentalFormProps) {
               <FormLabel>Nome do Inquilino</FormLabel>
               <FormControl>
                 <Input placeholder="João Silva" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="tenantCpf"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CPF do Inquilino</FormLabel>
+              <FormControl>
+                <Input placeholder="12345678900" maxLength={11} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -113,6 +159,30 @@ export function RentalForm({ onSubmit }: RentalFormProps) {
               <FormLabel>Valor Mensal</FormLabel>
               <FormControl>
                 <Input placeholder="R$ 2.500" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="contractFile"
+          render={({ field: { value, onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Contrato Assinado</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      onChange(file);
+                    }
+                  }}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
