@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FcGoogle } from "react-icons/fc";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -38,6 +37,18 @@ const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      
+      // Primeiro, verifica se o email já existe
+      const { data: existingUsers } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (existingUsers && existingUsers.length > 0) {
+        toast.error("Este email já está cadastrado.");
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -54,17 +65,6 @@ const Auth = () => {
       toast.error(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message);
     }
   };
 
@@ -153,30 +153,6 @@ const Auth = () => {
                 </div>
               </form>
             </TabsContent>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <Button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
-                >
-                  <FcGoogle className="mr-2 h-5 w-5" />
-                  Google
-                </Button>
-              </div>
-            </div>
           </Tabs>
         </CardContent>
       </Card>
