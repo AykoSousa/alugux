@@ -1,31 +1,13 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useState } from "react";
-import { RentalForm, RentalFormValues } from "@/components/rental-form";
 import { toast } from "sonner";
-
-interface Rental {
-  id: number;
-  propertyTitle: string;
-  tenantName: string;
-  tenantCpf: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  monthlyPrice: string;
-  contractFile?: File;
-}
+import { RentalDialog } from "@/components/rental-dialog";
+import { RentalCard } from "@/components/rental-card";
+import { Property, Rental, RentalFormValues } from "@/types/rental";
 
 const Rentals = () => {
   const [rentals, setRentals] = useState<Rental[]>([
@@ -55,8 +37,7 @@ const Rentals = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
 
-  // Simulated available properties (in a real app, this would come from your properties database)
-  const availableProperties = [
+  const availableProperties: Property[] = [
     { id: 1, title: "Apartamento Centro" },
     { id: 2, title: "Casa Jardim América" },
     { id: 3, title: "Sala Comercial Downtown" },
@@ -123,85 +104,38 @@ const Rentals = () => {
                 Gerencie seus contratos de aluguel
               </p>
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Novo Aluguel
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Novo Aluguel</DialogTitle>
-                </DialogHeader>
-                <RentalForm
-                  onSubmit={handleSubmit}
-                  availableProperties={availableProperties}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Aluguel
+            </Button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {rentals.map((rental) => (
-              <Card
+              <RentalCard
                 key={rental.id}
-                className="animated-card cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleRentalClick(rental)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-xl">{rental.propertyTitle}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Inquilino: {rental.tenantName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      CPF: {rental.tenantCpf}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Período: {rental.startDate} até {rental.endDate}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          rental.status === "Ativo"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {rental.status}
-                      </span>
-                      <span className="font-semibold">{rental.monthlyPrice}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                rental={rental}
+                onClick={handleRentalClick}
+              />
             ))}
           </div>
 
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Editar Aluguel</DialogTitle>
-              </DialogHeader>
-              {selectedRental && (
-                <RentalForm
-                  onSubmit={handleEdit}
-                  availableProperties={availableProperties}
-                  defaultValues={{
-                    propertyTitle: selectedRental.propertyTitle,
-                    tenantName: selectedRental.tenantName,
-                    tenantCpf: selectedRental.tenantCpf,
-                    startDate: selectedRental.startDate,
-                    endDate: selectedRental.endDate,
-                    monthlyPrice: selectedRental.monthlyPrice,
-                  }}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
+          <RentalDialog
+            open={open}
+            onOpenChange={setOpen}
+            onSubmit={handleSubmit}
+            title="Novo Aluguel"
+            availableProperties={availableProperties}
+          />
+
+          <RentalDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSubmit={handleEdit}
+            title="Editar Aluguel"
+            availableProperties={availableProperties}
+            defaultValues={selectedRental || undefined}
+          />
         </main>
       </div>
     </SidebarProvider>
