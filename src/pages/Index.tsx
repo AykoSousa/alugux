@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Key, Users } from "lucide-react";
+import { RevenueCard } from "@/components/revenue-card";
 
 const Dashboard = () => {
   const stats = [
@@ -39,7 +40,8 @@ const Dashboard = () => {
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <RevenueCard />
             {stats.map((stat) => (
               <Card key={stat.title} className="animated-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
