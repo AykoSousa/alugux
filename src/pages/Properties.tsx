@@ -14,9 +14,11 @@ import {
 import { useState } from "react";
 import { PropertyForm, PropertyFormValues } from "@/components/property-form";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Property {
-  id: number;
+  id: string;
   title: string;
   address: string;
   status: string;
@@ -24,72 +26,101 @@ interface Property {
 }
 
 const Properties = () => {
-  const [properties, setProperties] = useState<Property[]>([
-    {
-      id: 1,
-      title: "Apartamento Centro",
-      address: "Rua Principal, 123",
-      status: "Alugado",
-      price: "R$ 2.500",
-    },
-    {
-      id: 2,
-      title: "Casa Jardim América",
-      address: "Av. das Flores, 456",
-      status: "Disponível",
-      price: "R$ 3.200",
-    },
-    {
-      id: 3,
-      title: "Sala Comercial",
-      address: "Av. Comercial, 789",
-      status: "Alugado",
-      price: "R$ 1.800",
-    },
-  ]);
-
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  const handleSubmit = (values: PropertyFormValues) => {
-    const newProperty: Property = {
-      id: properties.length + 1,
-      title: values.title,
-      address: values.address,
-      price: values.price,
-      status: "Disponível",
-    };
+  const { data: properties = [], isLoading } = useQuery({
+    queryKey: ["properties"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    setProperties([...properties, newProperty]);
-    setOpen(false);
-    toast.success("Propriedade cadastrada com sucesso!");
+      if (error) {
+        toast.error("Erro ao carregar propriedades");
+        throw error;
+      }
+
+      return data.map((property) => ({
+        ...property,
+        price: `R$ ${Number(property.price).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+      }));
+    },
+  });
+
+  const handleSubmit = async (values: PropertyFormValues) => {
+    try {
+      const priceAsNumber = Number(values.price.replace(/[^0-9.-]+/g, ""));
+      
+      const { error } = await supabase.from("properties").insert({
+        title: values.title,
+        address: values.address,
+        price: priceAsNumber,
+        status: "Disponível",
+      });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      setOpen(false);
+      toast.success("Propriedade cadastrada com sucesso!");
+    } catch (error) {
+      console.error("Error creating property:", error);
+      toast.error("Erro ao cadastrar propriedade");
+    }
   };
 
-  const handleEdit = (values: PropertyFormValues) => {
+  const handleEdit = async (values: PropertyFormValues) => {
     if (!selectedProperty) return;
 
-    const updatedProperties = properties.map((property) =>
-      property.id === selectedProperty.id
-        ? {
-            ...property,
-            title: values.title,
-            address: values.address,
-            price: values.price,
-          }
-        : property
-    );
+    try {
+      const priceAsNumber = Number(values.price.replace(/[^0-9.-]+/g, ""));
+      
+      const { error } = await supabase
+        .from("properties")
+        .update({
+          title: values.title,
+          address: values.address,
+          price: priceAsNumber,
+        })
+        .eq("id", selectedProperty.id);
 
-    setProperties(updatedProperties);
-    setEditOpen(false);
-    setSelectedProperty(null);
-    toast.success("Propriedade atualizada com sucesso!");
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      setEditOpen(false);
+      setSelectedProperty(null);
+      toast.success("Propriedade atualizada com sucesso!");
+    } catch (error) {
+      console.error("Error updating property:", error);
+      toast.error("Erro ao atualizar propriedade");
+    }
   };
 
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
     setEditOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gray-50">
+          <AppSidebar />
+          <main className="flex-1 p-8 animate-fade-in">
+            <SidebarTrigger />
+            <div>Carregando...</div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
