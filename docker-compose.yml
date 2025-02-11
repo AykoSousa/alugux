@@ -1,15 +1,19 @@
-version: '3.8'
-
 services:
-  vite-app:
-    image: node:20-alpine
-    container_name: vite-app
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
+  app:
+    image: aykosn/alugux:latest
     ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=development
-    command: ["sh", "-c", "npm install && npm run dev -- --host"]
+      - 8080:8080
+    networks:
+      - alugux_net
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    networks:
+      - alugux_net
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+
+networks:
+  alugux_net:
+    driver: bridge
