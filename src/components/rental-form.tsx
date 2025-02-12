@@ -19,10 +19,10 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "sonner";
+import { Property } from "@/types/rental";
 
 const formSchema = z.object({
-  propertyTitle: z.string().min(1, "A propriedade é obrigatória"),
+  property_id: z.string().min(1, "A propriedade é obrigatória"),
   tenantName: z.string().min(1, "O nome do inquilino é obrigatório"),
   tenantCpf: z
     .string()
@@ -45,14 +45,15 @@ export type RentalFormValues = z.infer<typeof formSchema>;
 
 interface RentalFormProps {
   onSubmit: (values: RentalFormValues) => void;
-  availableProperties: Array<{ id: number; title: string }>;
+  availableProperties: Property[];
+  defaultValues?: RentalFormValues;
 }
 
-export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
+export function RentalForm({ onSubmit, availableProperties, defaultValues }: RentalFormProps) {
   const form = useForm<RentalFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      propertyTitle: "",
+    defaultValues: defaultValues || {
+      property_id: "",
       tenantName: "",
       tenantCpf: "",
       startDate: "",
@@ -63,8 +64,9 @@ export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
 
   const handleSubmit = (values: RentalFormValues) => {
     onSubmit(values);
-    form.reset();
-    toast.success("Aluguel cadastrado com sucesso!");
+    if (!defaultValues) {
+      form.reset();
+    }
   };
 
   return (
@@ -72,7 +74,7 @@ export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="propertyTitle"
+          name="property_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Propriedade</FormLabel>
@@ -84,7 +86,7 @@ export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
                 </FormControl>
                 <SelectContent>
                   {availableProperties.map((property) => (
-                    <SelectItem key={property.id} value={property.title}>
+                    <SelectItem key={property.id} value={property.id}>
                       {property.title}
                     </SelectItem>
                   ))}
@@ -190,7 +192,7 @@ export function RentalForm({ onSubmit, availableProperties }: RentalFormProps) {
         />
 
         <Button type="submit" className="w-full">
-          Cadastrar
+          {defaultValues ? "Atualizar" : "Cadastrar"}
         </Button>
       </form>
     </Form>

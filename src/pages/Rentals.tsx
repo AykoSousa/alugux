@@ -8,88 +8,170 @@ import { toast } from "sonner";
 import { RentalDialog } from "@/components/rental-dialog";
 import { RentalCard } from "@/components/rental-card";
 import { Property, Rental, RentalFormValues } from "@/types/rental";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Rentals = () => {
-  const [rentals, setRentals] = useState<Rental[]>([
-    {
-      id: 1,
-      propertyTitle: "Apartamento Centro",
-      tenantName: "João Silva",
-      tenantCpf: "12345678900",
-      startDate: "2024-01-01",
-      endDate: "2024-12-31",
-      status: "Ativo",
-      monthlyPrice: "R$ 2.500",
-    },
-    {
-      id: 2,
-      propertyTitle: "Casa Jardim América",
-      tenantName: "Maria Santos",
-      tenantCpf: "98765432100",
-      startDate: "2024-02-01",
-      endDate: "2025-01-31",
-      status: "Ativo",
-      monthlyPrice: "R$ 3.200",
-    },
-  ]);
-
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
 
-  const availableProperties: Property[] = [
-    { id: 1, title: "Apartamento Centro" },
-    { id: 2, title: "Casa Jardim América" },
-    { id: 3, title: "Sala Comercial Downtown" },
-    { id: 4, title: "Cobertura Beira Mar" },
-  ];
+  const { data: properties = [] } = useQuery({
+    queryKey: ["available-properties"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return [];
+      }
 
-  const handleSubmit = (values: RentalFormValues) => {
-    const newRental: Rental = {
-      id: rentals.length + 1,
-      propertyTitle: values.propertyTitle,
-      tenantName: values.tenantName,
-      tenantCpf: values.tenantCpf,
-      startDate: values.startDate,
-      endDate: values.endDate,
-      monthlyPrice: values.monthlyPrice,
-      status: "Ativo",
-      contractFile: values.contractFile,
-    };
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, title")
+        .eq("status", "Disponível");
 
-    setRentals([...rentals, newRental]);
-    setOpen(false);
-    toast.success("Aluguel cadastrado com sucesso!");
+      if (error) {
+        toast.error("Erro ao carregar propriedades");
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  const { data: rentals = [], isLoading } = useQuery({
+    queryKey: ["rentals"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from("rentals")
+        .select(`
+          *,
+          property:properties(title)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast.error("Erro ao carregar aluguéis");
+        throw error;
+      }
+
+      return data.map((rental) => ({
+        ...rental,
+        propertyTitle: rental.property.title,
+        monthlyPrice: `R$ ${Number(rental.monthly_price).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+      }));
+    },
+  });
+
+  const handleSubmit = async (values: RentalFormValues) => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return;
+      }
+
+      const priceAsNumber = Number(values.monthlyPrice.replace(/[^0-9.-]+/g, ""));
+      
+      const { error } = await supabase.from("rentals").insert({
+        property_id: values.property_id,
+        tenant_name: values.tenantName,
+        tenant_cpf: values.tenantCpf,
+        start_date: values.startDate,
+        end_date: values.endDate,
+        monthly_price: priceAsNumber,
+        status: "Ativo",
+        user_id: session.session.user.id,
+      });
+
+      if (error) throw error;
+
+      // Atualizar o status da propriedade para "Alugado"
+      await supabase
+        .from("properties")
+        .update({ status: "Alugado" })
+        .eq("id", values.property_id);
+
+      queryClient.invalidateQueries({ queryKey: ["rentals"] });
+      queryClient.invalidateQueries({ queryKey: ["available-properties"] });
+      setOpen(false);
+      toast.success("Aluguel cadastrado com sucesso!");
+    } catch (error) {
+      console.error("Error creating rental:", error);
+      toast.error("Erro ao cadastrar aluguel");
+    }
   };
 
-  const handleEdit = (values: RentalFormValues) => {
+  const handleEdit = async (values: RentalFormValues) => {
     if (!selectedRental) return;
 
-    const updatedRentals = rentals.map((rental) =>
-      rental.id === selectedRental.id
-        ? {
-            ...rental,
-            propertyTitle: values.propertyTitle,
-            tenantName: values.tenantName,
-            tenantCpf: values.tenantCpf,
-            startDate: values.startDate,
-            endDate: values.endDate,
-            monthlyPrice: values.monthlyPrice,
-            contractFile: values.contractFile,
-          }
-        : rental
-    );
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return;
+      }
 
-    setRentals(updatedRentals);
-    setEditOpen(false);
-    setSelectedRental(null);
-    toast.success("Aluguel atualizado com sucesso!");
+      const priceAsNumber = Number(values.monthlyPrice.replace(/[^0-9.-]+/g, ""));
+      
+      const { error } = await supabase
+        .from("rentals")
+        .update({
+          property_id: values.property_id,
+          tenant_name: values.tenantName,
+          tenant_cpf: values.tenantCpf,
+          start_date: values.startDate,
+          end_date: values.endDate,
+          monthly_price: priceAsNumber,
+        })
+        .eq("id", selectedRental.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["rentals"] });
+      setEditOpen(false);
+      setSelectedRental(null);
+      toast.success("Aluguel atualizado com sucesso!");
+    } catch (error) {
+      console.error("Error updating rental:", error);
+      toast.error("Erro ao atualizar aluguel");
+    }
   };
 
   const handleRentalClick = (rental: Rental) => {
     setSelectedRental(rental);
     setEditOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gray-50">
+          <AppSidebar />
+          <main className="flex-1 p-8 animate-fade-in">
+            <SidebarTrigger />
+            <div>Carregando...</div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -125,7 +207,7 @@ const Rentals = () => {
             onOpenChange={setOpen}
             onSubmit={handleSubmit}
             title="Novo Aluguel"
-            availableProperties={availableProperties}
+            availableProperties={properties}
           />
 
           <RentalDialog
@@ -133,8 +215,19 @@ const Rentals = () => {
             onOpenChange={setEditOpen}
             onSubmit={handleEdit}
             title="Editar Aluguel"
-            availableProperties={availableProperties}
-            defaultValues={selectedRental || undefined}
+            availableProperties={properties}
+            defaultValues={
+              selectedRental
+                ? {
+                    property_id: selectedRental.property_id,
+                    tenantName: selectedRental.tenantName,
+                    tenantCpf: selectedRental.tenantCpf,
+                    startDate: selectedRental.startDate,
+                    endDate: selectedRental.endDate,
+                    monthlyPrice: selectedRental.monthlyPrice,
+                  }
+                : undefined
+            }
           />
         </main>
       </div>

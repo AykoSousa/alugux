@@ -66,7 +66,7 @@ export type Database = {
           end_date: string
           id: string
           monthly_price: number
-          property_title: string
+          property_id: string
           start_date: string
           status: string
           tenant_cpf: string
@@ -79,7 +79,7 @@ export type Database = {
           end_date: string
           id?: string
           monthly_price: number
-          property_title: string
+          property_id: string
           start_date: string
           status: string
           tenant_cpf: string
@@ -92,7 +92,7 @@ export type Database = {
           end_date?: string
           id?: string
           monthly_price?: number
-          property_title?: string
+          property_id?: string
           start_date?: string
           status?: string
           tenant_cpf?: string
@@ -100,7 +100,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rentals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

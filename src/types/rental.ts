@@ -1,7 +1,7 @@
 
 export interface Rental {
-  id: number;
-  propertyTitle: string;
+  id: string;
+  property_id: string;
   tenantName: string;
   tenantCpf: string;
   startDate: string;
@@ -12,7 +12,7 @@ export interface Rental {
 }
 
 export interface RentalFormValues {
-  propertyTitle: string;
+  property_id: string;
   tenantName: string;
   tenantCpf: string;
   startDate: string;
@@ -22,6 +22,6 @@ export interface RentalFormValues {
 }
 
 export interface Property {
-  id: number;
+  id: string;
   title: string;
 }
