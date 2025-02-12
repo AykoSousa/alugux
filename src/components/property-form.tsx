@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "sonner";
 
 const formSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
@@ -24,12 +23,13 @@ export type PropertyFormValues = z.infer<typeof formSchema>;
 
 interface PropertyFormProps {
   onSubmit: (values: PropertyFormValues) => void;
+  initialValues?: PropertyFormValues;
 }
 
-export function PropertyForm({ onSubmit }: PropertyFormProps) {
+export function PropertyForm({ onSubmit, initialValues }: PropertyFormProps) {
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       title: "",
       address: "",
       price: "",
@@ -38,8 +38,9 @@ export function PropertyForm({ onSubmit }: PropertyFormProps) {
 
   const handleSubmit = (values: PropertyFormValues) => {
     onSubmit(values);
-    form.reset();
-    toast.success("Propriedade cadastrada com sucesso!");
+    if (!initialValues) {
+      form.reset();
+    }
   };
 
   return (
@@ -88,7 +89,7 @@ export function PropertyForm({ onSubmit }: PropertyFormProps) {
         />
 
         <Button type="submit" className="w-full">
-          Cadastrar
+          {initialValues ? "Atualizar" : "Cadastrar"}
         </Button>
       </form>
     </Form>

@@ -16,6 +16,7 @@ import { PropertyForm, PropertyFormValues } from "@/components/property-form";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Property {
   id: string;
@@ -27,6 +28,7 @@ interface Property {
 
 const Properties = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -34,6 +36,13 @@ const Properties = () => {
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("properties")
         .select("*")
@@ -56,6 +65,13 @@ const Properties = () => {
 
   const handleSubmit = async (values: PropertyFormValues) => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return;
+      }
+
       const priceAsNumber = Number(values.price.replace(/[^0-9.-]+/g, ""));
       
       const { error } = await supabase.from("properties").insert({
@@ -63,6 +79,7 @@ const Properties = () => {
         address: values.address,
         price: priceAsNumber,
         status: "Disponível",
+        user_id: session.session.user.id
       });
 
       if (error) throw error;
@@ -80,6 +97,13 @@ const Properties = () => {
     if (!selectedProperty) return;
 
     try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate("/auth");
+        return;
+      }
+
       const priceAsNumber = Number(values.price.replace(/[^0-9.-]+/g, ""));
       
       const { error } = await supabase
@@ -191,8 +215,9 @@ const Properties = () => {
               </DialogHeader>
               {selectedProperty && (
                 <PropertyForm
+                  key={selectedProperty.id}
                   onSubmit={handleEdit}
-                  defaultValues={{
+                  initialValues={{
                     title: selectedProperty.title,
                     address: selectedProperty.address,
                     price: selectedProperty.price,
