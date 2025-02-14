@@ -9,22 +9,33 @@ import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import { AuthProvider } from "@/components/auth-provider";
-import { BrowserRouter } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: (
+      <AuthProvider>
+        <Index />
+      </AuthProvider>
+    ),
   },
   {
     path: "/properties",
-    element: <Properties />,
+    element: (
+      <AuthProvider>
+        <Properties />
+      </AuthProvider>
+    ),
   },
   {
     path: "/rentals",
-    element: <Rentals />,
+    element: (
+      <AuthProvider>
+        <Rentals />
+      </AuthProvider>
+    ),
   },
   {
     path: "/auth",
@@ -39,12 +50,8 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </AuthProvider>
-      </BrowserRouter>
+      <RouterProvider router={router} />
+      <Toaster />
     </QueryClientProvider>
   );
 }
