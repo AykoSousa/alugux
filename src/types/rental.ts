@@ -2,6 +2,7 @@
 export interface Rental {
   id: string;
   property_id: string;
+  propertyTitle: string;
   tenantName: string;
   tenantCpf: string;
   startDate: string;

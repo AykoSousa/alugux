@@ -67,8 +67,14 @@ const Rentals = () => {
       }
 
       return data.map((rental) => ({
-        ...rental,
+        id: rental.id,
+        property_id: rental.property_id,
         propertyTitle: rental.property.title,
+        tenantName: rental.tenant_name,
+        tenantCpf: rental.tenant_cpf,
+        startDate: rental.start_date,
+        endDate: rental.end_date,
+        status: rental.status,
         monthlyPrice: `R$ ${Number(rental.monthly_price).toLocaleString("pt-BR", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
