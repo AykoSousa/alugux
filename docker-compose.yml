@@ -1,19 +1,52 @@
 services:
+
   app:
     image: aykosn/alugux:latest
+    container_name: app
+    networks:
+      - alugux_net
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
     ports:
       - 8080:8080
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - alugux_net
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    command:
+      - "-nginx.scrape-uri=http://nginx/stub_status"
+    ports:
+      - "9113:9113"
+    depends_on:
+      - nginx
     networks:
       - alugux_net
   prometheus:
     image: prom/prometheus:latest
+    container_name: prometheus
     ports:
       - 9090:9090
     networks:
       - alugux_net
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - alugux_net
+    
 
 networks:
   alugux_net:
+    name: alugux_net
     driver: bridge
