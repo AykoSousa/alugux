@@ -6,7 +6,7 @@ services:
     networks:
       - alugux_net
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:latest
     container_name: nginx
     ports:
       - 8080:8080
@@ -20,7 +20,7 @@ services:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx-exporter
     command:
-      - "-nginx.scrape-uri=http://nginx/stub_status"
+      - --nginx.scrape-uri=http://nginx:8080/status
     ports:
       - "9113:9113"
     depends_on:
@@ -30,12 +30,13 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    restart: always
     ports:
       - 9090:9090
     networks:
       - alugux_net
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
   
   grafana:
     image: grafana/grafana
@@ -48,5 +49,4 @@ services:
 
 networks:
   alugux_net:
-    name: alugux_net
     driver: bridge
