@@ -1,16 +1,8 @@
 global:
-  scrape_interval: "10s" # Intervalo de tempo entre a coleta de métricas
-  scrape_timeout: "15s" # Tempo de espera para o endpoint retornar os logs
+  scrape_interval: "15s"
+  scrape_timeout: "15s"
 
 scrape_configs:
   - job_name: nginx
     static_configs:
       - targets: [ 'nginx-exporter:9113' ]
-  
-  - job_name: prometheus
-    static_configs:
-      - targets: [ 'localhost:9090' ]
-  
-  - job_name: docker
-    static_configs:
-      - targets: [ '' ]
