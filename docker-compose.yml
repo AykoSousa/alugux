@@ -1,15 +1,52 @@
-version: '3.8'
-
 services:
-  vite-app:
-    image: node:20-alpine
-    container_name: vite-app
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
+
+  app:
+    image: aykosn/alugux:latest
+    container_name: app
+    networks:
+      - alugux_net
+  nginx:
+    image: nginx:latest
+    container_name: nginx
     ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=development
-    command: ["sh", "-c", "npm install && npm run dev -- --host"]
+      - 8080:8080
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - alugux_net
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    command:
+      - --nginx.scrape-uri=http://nginx:8080/status
+    ports:
+      - "9113:9113"
+    depends_on:
+      - nginx
+    networks:
+      - alugux_net
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - 9090:9090
+    networks:
+      - alugux_net
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - alugux_net
+    
+
+networks:
+  alugux_net:
+    driver: bridge
