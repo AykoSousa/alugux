@@ -1,16 +1,14 @@
 
-import { useState } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const RevenueCard = () => {
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+interface RevenueCardProps {
+  selectedMonth: string;
+}
 
+export const RevenueCard = ({ selectedMonth }: RevenueCardProps) => {
   const { data: totalRevenue, isLoading } = useQuery({
     queryKey: ["monthly-revenue", selectedMonth],
     queryFn: async () => {
@@ -32,40 +30,13 @@ export const RevenueCard = () => {
     },
   });
 
-  // Gera os últimos 12 meses para o select
-  const monthOptions = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    return {
-      value: format(date, "yyyy-MM"),
-      label: format(date, "MMMM yyyy", { locale: ptBR }),
-    };
-  });
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           Total a Receber
         </CardTitle>
-        <div className="flex items-center gap-4">
-          <Select
-            value={selectedMonth}
-            onValueChange={(value) => setSelectedMonth(value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {monthOptions.map((month) => (
-                <SelectItem key={month.value} value={month.value}>
-                  {month.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CreditCard className="w-4 h-4 text-gray-500" />
-        </div>
+        <CreditCard className="w-4 h-4 text-gray-500" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">
