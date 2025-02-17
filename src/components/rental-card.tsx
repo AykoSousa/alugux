@@ -10,7 +10,7 @@ interface RentalCardProps {
 export const RentalCard = ({ rental, onClick }: RentalCardProps) => {
   return (
     <Card
-      className="animated-card cursor-pointer hover:shadow-lg transition-shadow"
+      className="animated-card cursor-pointer"
       onClick={() => onClick(rental)}
     >
       <CardHeader>
@@ -31,8 +31,8 @@ export const RentalCard = ({ rental, onClick }: RentalCardProps) => {
             <span
               className={`px-2 py-1 rounded-full text-xs ${
                 rental.status === "Ativo"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
               }`}
             >
               {rental.status}

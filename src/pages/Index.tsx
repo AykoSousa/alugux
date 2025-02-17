@@ -101,7 +101,7 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 p-8 animate-fade-in">
           <SidebarTrigger />
@@ -113,7 +113,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-2 mb-6">
-            <CalendarIcon className="h-5 w-5 text-gray-500" />
+            <CalendarIcon className="h-5 w-5 text-muted-foreground" />
             <Select
               value={selectedMonth}
               onValueChange={(value) => setSelectedMonth(value)}
@@ -139,7 +139,7 @@ const Dashboard = () => {
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     {stat.title}
                   </CardTitle>
-                  <stat.icon className="w-4 h-4 text-gray-500" />
+                  <stat.icon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stat.value}</div>

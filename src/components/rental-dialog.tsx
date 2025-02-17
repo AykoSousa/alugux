@@ -27,7 +27,7 @@ export const RentalDialog = ({
 }: RentalDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto glass-panel">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
