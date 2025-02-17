@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { Building2, CreditCard, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { Sidebar, SidebarClose } from "@/components/ui/sidebar";
+import { Sidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -69,7 +69,6 @@ export function AppSidebar() {
           </Button>
         </div>
       </div>
-      <SidebarClose />
     </Sidebar>
   );
 }
