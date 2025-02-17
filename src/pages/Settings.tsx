@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, User, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/auth-provider";
 
 const profileFormSchema = z.object({
   full_name: z.string().min(1, "O nome é obrigatório"),
@@ -34,24 +34,60 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { session } = useAuth();
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      full_name: "",
+    },
   });
 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
   });
 
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', session?.user.id)
+          .single();
+
+        if (profile) {
+          profileForm.reset({
+            full_name: profile.full_name || "",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+      }
+    };
+
+    if (session?.user.id) {
+      loadUserProfile();
+    }
+  }, [session?.user.id, profileForm]);
+
   const onUpdateProfile = async (data: ProfileFormValues) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.updateUser({
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: data.full_name })
+        .eq('id', session?.user.id);
+
+      if (profileError) throw profileError;
+
+      const { error: authError } = await supabase.auth.updateUser({
         data: { full_name: data.full_name }
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
       toast.success("Perfil atualizado com sucesso!");
     } catch (error) {
       toast.error("Erro ao atualizar o perfil");
