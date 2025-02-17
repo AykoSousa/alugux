@@ -3,8 +3,10 @@ import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "next-themes";
 import Properties from "@/pages/Properties";
 import Rentals from "@/pages/Rentals";
+import Settings from "@/pages/Settings";
 import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/settings",
+    element: (
+      <AuthProvider>
+        <Settings />
+      </AuthProvider>
+    ),
+  },
+  {
     path: "/auth",
     element: <Auth />,
   },
@@ -49,10 +59,12 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="light">
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
