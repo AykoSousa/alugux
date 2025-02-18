@@ -168,7 +168,7 @@ const Rentals = () => {
   if (isLoading) {
     return (
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
+        <div className="min-h-screen flex w-full bg-background">
           <AppSidebar />
           <main className="flex-1 p-8 animate-fade-in">
             <SidebarTrigger />
@@ -181,7 +181,7 @@ const Rentals = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 p-8 animate-fade-in">
           <SidebarTrigger />

@@ -135,7 +135,7 @@ const Properties = () => {
   if (isLoading) {
     return (
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
+        <div className="min-h-screen flex w-full bg-background">
           <AppSidebar />
           <main className="flex-1 p-8 animate-fade-in">
             <SidebarTrigger />
@@ -148,7 +148,7 @@ const Properties = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 p-8 animate-fade-in">
           <SidebarTrigger />
@@ -166,7 +166,7 @@ const Properties = () => {
                   Nova Propriedade
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="glass-panel">
                 <DialogHeader>
                   <DialogTitle>Nova Propriedade</DialogTitle>
                 </DialogHeader>
@@ -179,7 +179,7 @@ const Properties = () => {
             {properties.map((property) => (
               <Card
                 key={property.id}
-                className="animated-card cursor-pointer hover:shadow-lg transition-shadow"
+                className="animated-card cursor-pointer"
                 onClick={() => handlePropertyClick(property)}
               >
                 <CardHeader>
@@ -194,8 +194,8 @@ const Properties = () => {
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           property.status === "Alugado"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-blue-100 text-blue-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
                         }`}
                       >
                         {property.status}
@@ -209,7 +209,7 @@ const Properties = () => {
           </div>
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent>
+            <DialogContent className="glass-panel">
               <DialogHeader>
                 <DialogTitle>Editar Propriedade</DialogTitle>
               </DialogHeader>
