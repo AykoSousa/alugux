@@ -1,8 +1,21 @@
+
 global:
   scrape_interval: "15s"
   scrape_timeout: "15s"
+  evaluation_interval: "15s"
 
 scrape_configs:
-  - job_name: nginx
+  - job_name: "nginx"
     static_configs:
-      - targets: [ 'nginx-exporter:9113' ]
+      - targets: ["nginx-exporter:9113"]
+    metrics_path: /metrics
+
+  - job_name: "app"
+    static_configs:
+      - targets: ["app:8080"]
+    metrics_path: /metrics
+
+  # Configuração para coletar métricas do próprio Prometheus
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
